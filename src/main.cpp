@@ -4,7 +4,7 @@
 
 uint32_t cb_Notify(
     const std::string& app_name,
-    uint32_t,
+    uint32_t replaces_id,
     const std::string& app_icon,
     const std::string& summary,
     const std::string& body,
