@@ -18,6 +18,13 @@
 #include <map>
 #include <any>
 #include <stdlib.h>
+#include <filesystem>
+
+std::string defaultConfig = 
+"{"
+"\"maxTimeout\": 30000,"
+"\"fullRetryInterval\":1000"
+"}";
 
 std::string strip_illegal_chars(const std::string& input) {
     icu::UnicodeString u = icu::UnicodeString::fromUTF8(input);
@@ -89,16 +96,31 @@ int main(int argc,char* argv[]) {
     } else {
         home = std::string(chome);
     }
-    home.append("milo/config.json");
+    home.append("milo/");
+    if (!std::filesystem::exists(home)) {
+        std::filesystem::create_directories(home);
+    }
+    home.append("config.json");
+    nlohmann::json config;
+    if (!std::filesystem::exists(home)) {
+        std::ofstream file(home);
+        if (!file.is_open()) {
+            fprintf(stderr,"< x > Failed to write configuration at '%s'.\n",home.c_str());
+            return 1;
+        }
+        file << defaultConfig;
+        file.close();
+    }
     std::ifstream file(home);
     if (!file.is_open()) {
-        fprintf(stderr,"< x > Failed to open configuration at '%s'.\n",home.c_str());
+        fprintf(stderr,"< x > Failed to read configuration at '%s'.\n",home.c_str());
         return 1;
     }
-
-    nlohmann::json config;
     file >> config;
     file.close();
+
+    int maxTimeout = config.value("maxTimeout",30000);
+    int fullRetryInterval = config.value("fullRetryInterval",1000);
 
     const char* app_name = argv[1];
     const char* app_icon = argv[3];
@@ -108,12 +130,12 @@ int main(int argc,char* argv[]) {
     const char* body = argv[5];
     std::string strBody = strip_illegal_chars(body);
     body = strBody.c_str();
-    int timeout = std::min((int)config["maxTimeout"],std::stoi(argv[6]));
+    int timeout = std::min((int)maxTimeout,std::stoi(argv[6]));
     if (timeout == 0) {
         timeout = 5000;
     }
     if (timeout == -1) {
-        timeout = (int)config.value("maxTimeout",30000);
+        timeout = (int)maxTimeout;
     }
     printf("Notification will remain visible for %d milliseconds.\n",timeout);
     // const std::vector<std::string>& actions = argv[6];
@@ -168,7 +190,7 @@ int main(int argc,char* argv[]) {
         }
         if (myNotif == -1) {
             printf("< ? > out of valid notification slots; waiting for an open one!\n");
-            std::this_thread::sleep_for(std::chrono::milliseconds(config.value("notificationOverflowTimeout",1000)));
+            std::this_thread::sleep_for(std::chrono::milliseconds(fullRetryInterval));
         }
         int windowPosY = pos.y+15+(myNotif*(GetScreenHeight()+10));
     }
