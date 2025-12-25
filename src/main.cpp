@@ -4,10 +4,10 @@
 #include <iostream>
 #include <unistd.h>
 #include <limits.h>
-#include <vector>
-#include <string>
 #include <fcntl.h>
 #include <csignal>
+#include <vector>
+#include <string>
 
 std::string displayProgram = "";
 

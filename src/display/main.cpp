@@ -5,8 +5,10 @@
 #undef Font
 #include <sys/mman.h>
 #include <sys/stat.h>
+#include <unistd.h>
 #include <raylib.h>
 #include <iostream>
+#include <fcntl.h>
 #include <fstream>
 #include <cstring>
 #include <thread>
@@ -14,8 +16,6 @@
 #include <vector>
 #include <map>
 #include <any>
-#include <fcntl.h>
-#include <unistd.h>
 
 std::optional<std::vector<std::string>> wrapText(
     const char* text,
