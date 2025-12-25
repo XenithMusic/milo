@@ -1,4 +1,5 @@
 #include <nlohmann/json.hpp>
+#include <unicode/unistr.h>
 #define Font X11_Font
 #include <X11/Xatom.h>
 #include <X11/Xlib.h>
@@ -16,6 +17,25 @@
 #include <vector>
 #include <map>
 #include <any>
+#include <stdlib.h>
+
+std::string strip_illegal_chars(const std::string& input) {
+    icu::UnicodeString u = icu::UnicodeString::fromUTF8(input);
+    icu::UnicodeString out;
+
+    for (int32_t i = 0; i < u.length();) {
+        UChar32 character = u.char32At(i);
+        i += U16_LENGTH(character);
+
+        if (character == 0x200E || character == 0x200F || (character >= 0x202A && character <= 0x202E) || (character >= 0x2066 && character <= 0x2069)) {
+            continue;
+        }
+        out.append(character);
+    }
+    std::string result;
+    out.toUTF8String(result);
+    return result;
+}
 
 std::optional<std::vector<std::string>> wrapText(
     const char* text,
@@ -83,7 +103,11 @@ int main(int argc,char* argv[]) {
     const char* app_name = argv[1];
     const char* app_icon = argv[3];
     const char* summary = argv[4];
+    std::string strSummary = strip_illegal_chars(summary);
+    summary = strSummary.c_str();
     const char* body = argv[5];
+    std::string strBody = strip_illegal_chars(body);
+    body = strBody.c_str();
     int timeout = std::min((int)config["maxTimeout"],std::stoi(argv[6]));
     if (timeout == 0) {
         timeout = 5000;

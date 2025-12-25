@@ -15,6 +15,9 @@ DBUS_LIBS   = -lsdbus-c++
 RAY_CFLAGS = $(shell pkg-config --cflags raylib)
 RAY_LIBS   = $(shell pkg-config --libs raylib)
 
+ICU_CFLAGS = $(shell pkg-config --cflags icu-uc)
+ICU_LIBS   = $(shell pkg-config --libs icu-uc)
+
 X11_CFLAGS = $(shell pkg-config --cflags x11)
 X11_LIBS = $(shell pkg-config --libs x11)
 
@@ -24,7 +27,7 @@ $(TARGET_DAEMON): $(SRC_DAEMON)
 	$(CXX) $(CXXFLAGS) $(DBUS_CFLAGS) $(SRC_DAEMON) -o $(TARGET_DAEMON) -Wl,-Bstatic $(DBUS_LIBS) -Wl,-Bdynamic -lsystemd -lcap 
 
 $(TARGET_VIDEO): $(SRC_VIDEO)
-	$(CXX) $(CXXFLAGS) $(RAY_CFLAGS) $(X11_CFLAGS) $(SRC_VIDEO) -o $(TARGET_VIDEO) $(RAY_LIBS) $(X11_LIBS)
+	$(CXX) $(CXXFLAGS) $(RAY_CFLAGS) $(X11_CFLAGS) $(ICU_CFLAGS) $(SRC_VIDEO) -o $(TARGET_VIDEO) $(RAY_LIBS) $(X11_LIBS) $(ICU_LIBS)
 
 clean:
 	rm -f $(TARGET_DAEMON)
