@@ -10,7 +10,7 @@ TARGET_VIDEO   = bin/milo_display
 SRC_VIDEO	  = src/display/main.cpp
 
 DBUS_CFLAGS = $(shell pkg-config --cflags sdbus-c++)
-DBUS_LIBS   = $(shell pkg-config --libs sdbus-c++)
+DBUS_LIBS   = -lsdbus-c++
 
 RAY_CFLAGS = $(shell pkg-config --cflags raylib)
 RAY_LIBS   = $(shell pkg-config --libs raylib)
@@ -21,7 +21,7 @@ X11_LIBS = $(shell pkg-config --libs x11)
 all: $(TARGET_DAEMON) $(TARGET_VIDEO)
 
 $(TARGET_DAEMON): $(SRC_DAEMON)
-	$(CXX) $(CXXFLAGS) $(DBUS_CFLAGS) $(SRC_DAEMON) -o $(TARGET_DAEMON) $(DBUS_LIBS)
+	$(CXX) $(CXXFLAGS) $(DBUS_CFLAGS) $(SRC_DAEMON) -o $(TARGET_DAEMON) -Wl,-Bstatic $(DBUS_LIBS) -Wl,-Bdynamic -lsystemd -lcap 
 
 $(TARGET_VIDEO): $(SRC_VIDEO)
 	$(CXX) $(CXXFLAGS) $(RAY_CFLAGS) $(X11_CFLAGS) $(SRC_VIDEO) -o $(TARGET_VIDEO) $(RAY_LIBS) $(X11_LIBS)
