@@ -113,7 +113,7 @@ int main(int argc,char* argv[]) {
         timeout = 5000;
     }
     if (timeout == -1) {
-        timeout = (int)config["maxTimeout"];
+        timeout = (int)config.value("maxTimeout",30000);
     }
     printf("Notification will remain visible for %d milliseconds.\n",timeout);
     // const std::vector<std::string>& actions = argv[6];
@@ -142,12 +142,19 @@ int main(int argc,char* argv[]) {
     ftruncate(shmfd,sizeof(bool)*64);
 
     bool* notificationIndex = static_cast<bool*>(mmap(nullptr,sizeof(bool)*64,PROT_READ|PROT_WRITE,MAP_SHARED,shmfd,0));
-    int myNotif = 0;
-    for (int i = 0; i < 64; ++i) {
-        if (notificationIndex[i] == true) {
-            myNotif = i;
-            notificationIndex[i] = false;
-            break;
+    int myNotif = -1;
+    while (myNotif == -1) {
+        myNotif = -1;
+        for (int i = 0; i < 64; ++i) {
+            if (notificationIndex[i] == true) {
+                myNotif = i;
+                notificationIndex[i] = false;
+                break;
+            }
+        }
+        if (myNotif == -1) {
+            printf("< ? > out of notification slots; waiting for an open one!\n");
+            std::this_thread::sleep_for(std::chrono::milliseconds(config.value("notificationOverflowTimeout",1000)));
         }
     }
 
