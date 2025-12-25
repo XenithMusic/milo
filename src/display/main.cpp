@@ -118,7 +118,9 @@ int main(int argc,char* argv[]) {
     SetTargetFPS(15);
 
     auto wrappedBody = wrapText(body,280,10);
-    SetWindowSize(300,75+((wrappedBody.size()-1)*10));
+    auto wrappedSummary = wrapText(summary,280,20);
+    int wrappedSumHeight = ((wrappedSummary.size()-1)*20);
+    SetWindowSize(300,75+((wrappedBody.size()-1)*10)+wrappedSumHeight);
 
     const char* shm_name = "/my_shared_value";
 
@@ -154,10 +156,13 @@ int main(int argc,char* argv[]) {
         appname_display.append(app_name);
         BeginDrawing();
         ClearBackground({255,255,255,255});
-        DrawText(summary,10,10,20,BLACK);
-        DrawText(appname_display.c_str(),10,30,10,BLACK);
+        for (size_t i=0;i<wrappedSummary.size();i++) {
+            DrawText(wrappedSummary[i].c_str(),10,10+(i*20),20,BLACK);
+        }
+        // DrawText(summary,10,10+wrappedSumHeight,20,BLACK);
+        DrawText(appname_display.c_str(),10,30+wrappedSumHeight,10,BLACK);
         for (size_t i=0;i<wrappedBody.size();i++) {
-            DrawText(wrappedBody[i].c_str(),10,55+(i*10),10,BLACK);
+            DrawText(wrappedBody[i].c_str(),10,55+(i*10)+wrappedSumHeight,10,BLACK);
         }
         if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
             break;
