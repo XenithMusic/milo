@@ -105,10 +105,6 @@ int main(int argc,char* argv[]) {
     }
     printf("Notification will remain visible for %d milliseconds.\n",timeout);
     // const std::vector<std::string>& actions = argv[6];
-    Display* d = XOpenDisplay(nullptr);
-    Window focused;
-    int revert;
-    XGetInputFocus(d, &focused, &revert);
 
     SetConfigFlags(FLAG_WINDOW_UNDECORATED | FLAG_WINDOW_TRANSPARENT | FLAG_WINDOW_HIDDEN | FLAG_WINDOW_UNFOCUSED);
     InitWindow(300,75,"milo notification");
@@ -137,12 +133,50 @@ int main(int argc,char* argv[]) {
         }
     }
 
-    printf("Inexplicable behavior caused by: %d\n",myNotif);
+    printf("This notification is at position %d\n",myNotif);
+    
+    Display* d = XOpenDisplay(nullptr);
+    if (!d) {
+        fprintf(stderr,"Cannot open display\n");
+        return 1;
+    }
+    Window root = DefaultRootWindow(d);
+    Window focused;
+    int revert;
+    XGetInputFocus(d, &focused, &revert);
+    Window root_return,child_return;
+    int root_x,root_y;
+    int win_x,win_y;
+    uint mask_return;
+    if (!XQueryPointer(
+        d,
+        root,
+        &root_return,
+        &child_return,
+        &root_x,
+        &root_y,
+        &win_x,
+        &win_y,
+        &mask_return
+    )) {
+        fprintf(stderr,"Pointer is not on the same screen\n");
+        return 1;
+    }
 
     ClearWindowState(FLAG_WINDOW_HIDDEN);
     SetWindowPosition(pos.x+monitorWidth-GetScreenWidth()-15,pos.y+15+(myNotif*(GetScreenHeight()+10)));
     if (focused != None) {
         XSetInputFocus(d, focused, RevertToPointerRoot, CurrentTime);
+
+        XWarpPointer(
+            d,
+            None,
+            root,
+            0,0,0,0,
+            root_x,
+            root_y
+        );
+
         XFlush(d);
     }
 
