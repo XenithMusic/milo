@@ -22,7 +22,7 @@
 
 std::string defaultConfig = 
 "{"
-"\"maxTimeout\": 30000,"
+"\"maxTimeout\": 15000,"
 "\"fullRetryInterval\":1000"
 "}";
 
@@ -119,7 +119,7 @@ int main(int argc,char* argv[]) {
     file >> config;
     file.close();
 
-    int maxTimeout = config.value("maxTimeout",30000);
+    int maxTimeout = config.value("maxTimeout",15000);
     int fullRetryInterval = config.value("fullRetryInterval",1000);
 
     const char* app_name = argv[1];
