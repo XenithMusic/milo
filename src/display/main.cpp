@@ -134,18 +134,32 @@ int main(int argc,char* argv[]) {
         return 1;
     }
     int wrappedSumHeight = ((wrappedSummary->size()-1)*20);
-    SetWindowSize(300,75+((wrappedBody->size()-1)*10)+wrappedSumHeight);
+    int windowHeight = 75+((wrappedBody->size()-1)*10)+wrappedSumHeight;
+    SetWindowSize(300,windowHeight);
 
     const char* shm_name = "/my_shared_value";
 
     int shmfd = shm_open(shm_name, O_CREAT | O_RDWR, 0666);
     ftruncate(shmfd,sizeof(bool)*64);
 
+    Display* d = XOpenDisplay(nullptr);
+    if (!d) {
+        fprintf(stderr,"Cannot open display\n");
+        return 1;
+    }
+
+    int screen = DefaultScreen(d);
+
     bool* notificationIndex = static_cast<bool*>(mmap(nullptr,sizeof(bool)*64,PROT_READ|PROT_WRITE,MAP_SHARED,shmfd,0));
     int myNotif = -1;
+    int windowPosY;
     while (myNotif == -1) {
         myNotif = -1;
         for (int i = 0; i < 64; ++i) {
+            windowPosY = pos.y+15+(i*(GetScreenHeight()+10));
+            if (windowPosY >= XDisplayHeight(d,screen)-windowHeight) {
+                break;
+            }
             if (notificationIndex[i] == true) {
                 myNotif = i;
                 notificationIndex[i] = false;
@@ -153,18 +167,14 @@ int main(int argc,char* argv[]) {
             }
         }
         if (myNotif == -1) {
-            printf("< ? > out of notification slots; waiting for an open one!\n");
+            printf("< ? > out of valid notification slots; waiting for an open one!\n");
             std::this_thread::sleep_for(std::chrono::milliseconds(config.value("notificationOverflowTimeout",1000)));
         }
+        int windowPosY = pos.y+15+(myNotif*(GetScreenHeight()+10));
     }
 
     printf("This notification is at position %d\n",myNotif);
     
-    Display* d = XOpenDisplay(nullptr);
-    if (!d) {
-        fprintf(stderr,"Cannot open display\n");
-        return 1;
-    }
     Window root = DefaultRootWindow(d);
     Window focused;
     int revert;
@@ -189,7 +199,7 @@ int main(int argc,char* argv[]) {
     }
 
     ClearWindowState(FLAG_WINDOW_HIDDEN);
-    SetWindowPosition(pos.x+monitorWidth-GetScreenWidth()-15,pos.y+15+(myNotif*(GetScreenHeight()+10)));
+    SetWindowPosition(pos.x+monitorWidth-GetScreenWidth()-15,windowPosY);
     if (focused != None) {
         XSetInputFocus(d, focused, RevertToPointerRoot, CurrentTime);
 
