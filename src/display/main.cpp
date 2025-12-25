@@ -114,7 +114,7 @@ int main(int argc,char* argv[]) {
     SetTargetFPS(15);
 
     auto wrappedBody = wrapText(body,280,10);
-    auto wrappedSummary = wrapText(summary,280,20);
+    auto wrappedSummary = wrapText(summary,270,20);
     int wrappedSumHeight = ((wrappedSummary.size()-1)*20);
     SetWindowSize(300,75+((wrappedBody.size()-1)*10)+wrappedSumHeight);
 
