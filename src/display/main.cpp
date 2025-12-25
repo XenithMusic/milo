@@ -17,52 +17,40 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-std::string popLastWord(std::string& line) {
-    if (line.empty()) {
-        return {};
-    }
-
-    size_t end = line.find_last_not_of(' ');
-    if (end == std::string::npos) {
-        line.clear();
-        return {};
-    }
-
-    size_t start = line.find_last_of(' ', end);
-    size_t wordStart = (start == std::string::npos) ? 0 : start + 1;
-
-    std::string word = line.substr(wordStart, end - wordStart + 1);
-    line.erase(wordStart);
-
-    return word;
-}
-
-std::vector<std::string> wrapText(
+std::optional<std::vector<std::string>> wrapText(
     const char* text,
     size_t maxWidth,
     float fontSize
 ) {
     size_t textLen = strlen(text);
+    if (text[textLen] != '\0') {
+        fprintf(stderr,"< ! > Text is illegal!");
+        return std::nullopt;
+    }
     std::string line = "";
+    std::string word = "";
     std::vector<std::string> lines = {};
-    for (size_t i=0;i<textLen;i++) {
+    for (size_t i=0;i<textLen+1;i++) {
         char character = text[i];
-        line.push_back(character);
-        if (character == ' ') {
+        if (character == ' ' or !character) {
             int size = MeasureText(line.c_str(),fontSize);
-            if (size > maxWidth) {
-                std::string lastWord = popLastWord(line);
+            printf("size: %d\n",size);
+            if (size >= maxWidth) {
+                line = line.substr(0,line.find_last_of(' '));
                 lines.push_back(line);
-                line = lastWord;
-                line.push_back(character);
+                line = word;
             }
-            continue;
+            word = "";
+        } else {
+            word.push_back(character);
         }
+        line.push_back(character);
         if (character == '\n') {
             lines.push_back(line);
             line = "";
         }
     }
+    printf("size: %d\n",MeasureText(line.c_str(),fontSize));
     lines.push_back(line);
     return lines;
 }
@@ -114,9 +102,15 @@ int main(int argc,char* argv[]) {
     SetTargetFPS(15);
 
     auto wrappedBody = wrapText(body,280,10);
-    auto wrappedSummary = wrapText(summary,270,20);
-    int wrappedSumHeight = ((wrappedSummary.size()-1)*20);
-    SetWindowSize(300,75+((wrappedBody.size()-1)*10)+wrappedSumHeight);
+    auto wrappedSummary = wrapText(summary,280,20);
+    if (!wrappedBody) {
+        return 1;
+    }
+    if (!wrappedSummary) {
+        return 1;
+    }
+    int wrappedSumHeight = ((wrappedSummary->size()-1)*20);
+    SetWindowSize(300,75+((wrappedBody->size()-1)*10)+wrappedSumHeight);
 
     const char* shm_name = "/my_shared_value";
 
@@ -190,13 +184,13 @@ int main(int argc,char* argv[]) {
         appname_display.append(app_name);
         BeginDrawing();
         ClearBackground({255,255,255,255});
-        for (size_t i=0;i<wrappedSummary.size();i++) {
-            DrawText(wrappedSummary[i].c_str(),10,10+(i*20),20,BLACK);
+        for (size_t i=0;i<wrappedSummary->size();i++) {
+            DrawText(wrappedSummary.value()[i].c_str(),10,10+(i*20),20,BLACK);
         }
         // DrawText(summary,10,10+wrappedSumHeight,20,BLACK);
         DrawText(appname_display.c_str(),10,30+wrappedSumHeight,10,BLACK);
-        for (size_t i=0;i<wrappedBody.size();i++) {
-            DrawText(wrappedBody[i].c_str(),10,55+(i*10)+wrappedSumHeight,10,BLACK);
+        for (size_t i=0;i<wrappedBody->size();i++) {
+            DrawText(wrappedBody.value()[i].c_str(),10,55+(i*10)+wrappedSumHeight,10,BLACK);
         }
         if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
             break;
