@@ -46,7 +46,7 @@ std::string strip_illegal_chars(const std::string& input) {
 
 std::optional<std::vector<std::string>> wrapText(
     const char* text,
-    size_t maxWidth,
+    ssize_t maxWidth,
     float fontSize
 ) {
     size_t textLen = strlen(text);
@@ -123,7 +123,7 @@ int main(int argc,char* argv[]) {
     int fullRetryInterval = config.value("fullRetryInterval",1000);
 
     const char* app_name = argv[1];
-    const char* app_icon = argv[3];
+    // const char* app_icon = argv[3];
     const char* summary = argv[4];
     std::string strSummary = strip_illegal_chars(summary);
     summary = strSummary.c_str();
@@ -192,7 +192,7 @@ int main(int argc,char* argv[]) {
             printf("< ? > out of valid notification slots; waiting for an open one!\n");
             std::this_thread::sleep_for(std::chrono::milliseconds(fullRetryInterval));
         }
-        int windowPosY = pos.y+15+(myNotif*(GetScreenHeight()+10));
+        windowPosY = pos.y+15+(myNotif*(GetScreenHeight()+10));
     }
 
     printf("This notification is at position %d\n",myNotif);

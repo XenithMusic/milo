@@ -1,5 +1,5 @@
 CXX	  = g++
-CXXFLAGS = -std=c++17 -Wall -Wextra
+CXXFLAGS = -std=c++17 -Wall -Wextra -Wno-unused-parameter
 PKGCFG   = pkg-config
 DBUS	 = dbus-1
 
